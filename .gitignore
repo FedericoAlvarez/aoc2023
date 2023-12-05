@@ -1,0 +1,12 @@
+# Generated code
+/generated/*
+# Include .gitkeep files
+!/**/.gitkeep
+
+# macOS
+.DS_Store
+
+# IDE's
+/.idea
+/.project
+/.settings
