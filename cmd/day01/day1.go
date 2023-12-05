@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"unicode/utf8"
 )
 
@@ -45,23 +46,46 @@ var numbers = map[string]string{
 func main() {
 	lines := strings.Split(input, "\n")
 	total := 0
+
+	c := make(chan int, len(lines))
+
+	var wg sync.WaitGroup
+
 	for _, l := range lines {
-		if l == "" {
-			continue
-		}
-		r := regexp.MustCompile("(one|two|three|four|five|six|seven|eight|nine|[0-9])")
-		r2 := regexp.MustCompile("(eno|owt|eerht|ruof|evif|xis|neves|thgie|enin|[0-9])")
-
-		front := r.FindString(l)
-		back := r2.FindString(Reverse(l))
-
-		n, _ := strconv.Atoi(fmt.Sprint(numbers[front] + numbers[back]))
-		total += n
+		wg.Add(1)
+		go parseLine(l, c, &wg)
 	}
+	// Why in a routine? Any advantage?
+	go func() {
+		wg.Wait()
+		close(c)
+	}()
+
+	for res := range c {
+		total += res
+	}
+
 	fmt.Printf("Result: %v\n", total)
 }
 
-func Reverse(s string) string {
+func parseLine(line string, c chan int, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	if line == "" {
+		c <- 0
+		return
+	}
+	r := regexp.MustCompile("(one|two|three|four|five|six|seven|eight|nine|[0-9])")
+	r2 := regexp.MustCompile("(eno|owt|eerht|ruof|evif|xis|neves|thgie|enin|[0-9])")
+
+	front := r.FindString(line)
+	back := r2.FindString(reverse(line))
+
+	n, _ := strconv.Atoi(fmt.Sprint(numbers[front] + numbers[back]))
+	c <- n
+}
+
+func reverse(s string) string {
 	size := len(s)
 	buf := make([]byte, size)
 	for start := 0; start < size; {

@@ -15,7 +15,7 @@ func TestParsing(t *testing.T) {
 	r2 := regexp.MustCompile("(eno|owt|eerht|ruof|evif|xis|neves|thgie|enin|[0-9])")
 
 	front := r.FindString(s)
-	back := r2.FindString(Reverse(s))
+	back := r2.FindString(reverse(s))
 
 	fmt.Println("front: " + front)
 	fmt.Println("back: " + back)
