@@ -46,30 +46,35 @@ var numbers = map[string]string{
 func main() {
 	lines := strings.Split(input, "\n")
 	total := 0
-
 	c := make(chan int, len(lines))
 
-	var wg sync.WaitGroup
-
-	for _, l := range lines {
-		wg.Add(1)
-		go parseLine(l, c, &wg)
-	}
-	// Why in a routine? Any advantage?
 	go func() {
+		var wg sync.WaitGroup
+		for _, l := range lines {
+			wg.Add(1)
+			go func(l string) {
+				defer wg.Done()
+				parseLine(l, c)
+			}(l)
+		}
 		wg.Wait()
 		close(c)
 	}()
 
-	for res := range c {
+	for {
+		res, ok := <-c
+		if !ok {
+			break
+		}
 		total += res
 	}
 
+	//wg.Wait()
 	fmt.Printf("Result: %v\n", total)
 }
 
-func parseLine(line string, c chan int, wg *sync.WaitGroup) {
-	defer wg.Done()
+func parseLine(line string, c chan int) {
+	//defer wg.Done()
 
 	if line == "" {
 		c <- 0
