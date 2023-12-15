@@ -146,7 +146,6 @@ func part2() {
 	humidityToLocationKey := sortMapKEys(humidity_to_location_map)
 
 	min := 99999999999999999
-
 	index = 0
 
 	c := make(chan int)
