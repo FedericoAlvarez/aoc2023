@@ -7,6 +7,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
 )
 
 ////go:embed input.txt test_input
@@ -23,7 +25,12 @@ type almanac struct {
 
 func main() {
 	//part1()
+	start := time.Now()
+
 	part2()
+
+	duration := time.Since(start)
+	fmt.Println("Duration: ", duration)
 }
 func part2() {
 	lines := strings.Split(test_input, "\n")
@@ -141,27 +148,46 @@ func part2() {
 	min := 99999999999999999
 
 	index = 0
-	for len(seeds) > index {
 
-		start := stringToInt(seeds[index])
-		end := stringToInt(seeds[index]) + stringToInt(seeds[index+1])
-		index += 2
-		//go func(s, e int) {
-		for i := start; i < end; i++ {
-			seedAsInt := i
-			seedAsInt = calculate(seedAsInt, seedToSoilKeys, seed_to_soil_map)
-			seedAsInt = calculate(seedAsInt, soilToFertilizerKey, soil_to_fertilizer_map)
-			seedAsInt = calculate(seedAsInt, fertilizerToWaterKey, fertilizer_to_water_map)
-			seedAsInt = calculate(seedAsInt, waterToLightKey, water_to_light_map)
-			seedAsInt = calculate(seedAsInt, lightToTemperatureKey, light_to_temperature_map)
-			seedAsInt = calculate(seedAsInt, temperatureToHumidityKey, temperature_to_humidity_map)
-			seedAsInt = calculate(seedAsInt, humidityToLocationKey, humidity_to_location_map)
-			if min > seedAsInt {
-				min = seedAsInt
-			}
+	c := make(chan int)
+
+	go func() {
+		var wg sync.WaitGroup
+		for len(seeds) > index {
+
+			start := stringToInt(seeds[index])
+			end := stringToInt(seeds[index]) + stringToInt(seeds[index+1])
+			index += 2
+			wg.Add(1)
+			go func(s, e int) {
+				defer wg.Done()
+				for i := s; i < e; i++ {
+					seedAsInt := i
+					seedAsInt = calculate(seedAsInt, seedToSoilKeys, seed_to_soil_map)
+					seedAsInt = calculate(seedAsInt, soilToFertilizerKey, soil_to_fertilizer_map)
+					seedAsInt = calculate(seedAsInt, fertilizerToWaterKey, fertilizer_to_water_map)
+					seedAsInt = calculate(seedAsInt, waterToLightKey, water_to_light_map)
+					seedAsInt = calculate(seedAsInt, lightToTemperatureKey, light_to_temperature_map)
+					seedAsInt = calculate(seedAsInt, temperatureToHumidityKey, temperature_to_humidity_map)
+					seedAsInt = calculate(seedAsInt, humidityToLocationKey, humidity_to_location_map)
+					c <- seedAsInt
+
+				}
+			}(start, end)
 		}
-		//}(start, end)
+		wg.Wait()
+		close(c)
+	}()
 
+	for {
+		res, ok := <-c
+		if !ok {
+			break
+
+		}
+		if min > res {
+			min = res
+		}
 	}
 
 	fmt.Println(min)
