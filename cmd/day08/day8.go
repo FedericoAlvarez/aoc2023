@@ -16,17 +16,17 @@ const exitNode = "ZZZ"
 var r = regexp.MustCompile(`(\w+)`)
 
 type node struct {
-	left  string
-	right string
+	left, right string
 }
 
 func main() {
-	//part1()
+	part1()
 	part2()
 
 }
 
 func part2() {
+	//ring
 	lines := strings.Split(input, "\n")
 	directions := lines[0]
 	input := make(map[string]node)
@@ -52,24 +52,6 @@ func part2() {
 	solution := LCM(a[0], a[1], a[2:]...)
 
 	fmt.Println("Solution part 2: ", solution)
-}
-
-func LCM(a, b int, integers ...int) int {
-	result := a * b / GCD(a, b)
-
-	for i := 0; i < len(integers); i++ {
-		result = LCM(result, integers[i])
-	}
-
-	return result
-}
-func GCD(a, b int) int {
-	for b != 0 {
-		t := b
-		b = a % b
-		a = t
-	}
-	return a
 }
 
 func compute(start string, directions string, input map[string]node) int {
@@ -119,4 +101,22 @@ func part1() {
 	}
 
 	fmt.Println("Solution part 1: ", steps)
+}
+
+func LCM(a, b int, integers ...int) int {
+	result := a * b / GCD(a, b)
+
+	for i := 0; i < len(integers); i++ {
+		result = LCM(result, integers[i])
+	}
+
+	return result
+}
+func GCD(a, b int) int {
+	for b != 0 {
+		t := b
+		b = a % b
+		a = t
+	}
+	return a
 }
