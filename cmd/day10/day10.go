@@ -27,24 +27,25 @@ func part2() {
 
 	var points []point
 	stop := false
-	for _, actual := range fm {
+	for _, m := range fm {
+		current := m
 		previous := startPoint
 		points = append(points, previous)
-		points = append(points, actual)
+		points = append(points, current)
 		for {
-			if puzzle[actual.l][actual.c] == puzzle[startPoint.l][startPoint.c] {
+			if puzzle[current.l][current.c] == puzzle[startPoint.l][startPoint.c] {
 				//"Reach starting point"
 				stop = true
 				break
 			}
-			n := next(puzzle, actual, previous)
+			n := next(puzzle, current, previous)
 			if n == deadEnd {
 				//"Reach dead end"
 				break
 			}
-			previous = actual
-			actual = n
-			points = append(points, actual)
+			previous = current
+			current = n
+			points = append(points, current)
 		}
 		if stop {
 			break
@@ -73,22 +74,28 @@ func part1() {
 	startPoint, puzzle := fillPuzzle()
 	fm := firstMove(startPoint, puzzle)
 	result := 0
-	for _, actual := range fm {
+	stop := false
+	for _, m := range fm {
+		current := m
 		result = 0
 		previous := startPoint
 		for {
 			result++
-			if puzzle[actual.l][actual.c] == puzzle[startPoint.l][startPoint.c] {
+			if puzzle[current.l][current.c] == puzzle[startPoint.l][startPoint.c] {
 				//"Reach starting point"
+				stop = true
 				break
 			}
-			n := next(puzzle, actual, previous)
+			n := next(puzzle, current, previous)
 			if n == deadEnd {
 				// "Reach dead end"
 				break
 			}
-			previous = actual
-			actual = n
+			previous = current
+			current = n
+		}
+		if stop {
+			break
 		}
 	}
 	fmt.Println("Solution part 1: ", result/2)
