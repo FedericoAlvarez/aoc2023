@@ -38,7 +38,7 @@ func part2() {
 				break
 			}
 			n := next(puzzle, actual, previous)
-			if n.c == -1 && n.l == -1 {
+			if n == deadEnd {
 				//"Reach dead end"
 				break
 			}
