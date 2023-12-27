@@ -14,6 +14,8 @@ type point struct {
 	l, c int
 }
 
+var deadEnd = point{-1, -1}
+
 func main() {
 	part1()
 	part2()
@@ -81,7 +83,7 @@ func part1() {
 				break
 			}
 			n := next(puzzle, actual, previous)
-			if n.c == -1 && n.l == -1 {
+			if n == deadEnd {
 				// "Reach dead end"
 				break
 			}
@@ -115,116 +117,74 @@ func fillPuzzle() (p point, puzzle [][]string) {
 
 func firstMove(p point, puzzle [][]string) []point {
 	var moves []point
+	r, ok := moveRight(p, puzzle)
+	if ok {
+		moves = append(moves, r)
+	}
 
-	r := puzzle[p.l][p.c+1]
-	if moveRight(r) {
-		moves = append(moves, point{p.l, p.c + 1})
+	l, ok := moveLeft(p, puzzle)
+	if ok {
+		moves = append(moves, l)
 	}
-	l := puzzle[p.l][p.c-1]
-	if moveLeft(l) {
-		moves = append(moves, point{p.l, p.c - 1})
+
+	u, ok := moveUp(p, puzzle)
+	if ok {
+		moves = append(moves, u)
 	}
-	u := puzzle[p.l-1][p.c]
-	if moveUp(u) {
-		moves = append(moves, point{p.l - 1, p.c})
-	}
-	d := puzzle[p.l+1][p.c]
-	if moveDown(d) {
-		moves = append(moves, point{p.l - 1, p.c})
+
+	d, ok := moveDown(p, puzzle)
+	if ok {
+		moves = append(moves, d)
 	}
 	return moves
 }
 
 func next(puzzle [][]string, actual, previous point) point {
-	nextPostion := point{}
+	next := point{}
+	ok := false
 	switch puzzle[actual.l][actual.c] {
 	case "|":
 		if actual.l > previous.l {
-			nextPostion = point{actual.l + 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveDown(a) {
-				return nextPostion
-			}
+			next, ok = moveDown(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l - 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveUp(a) {
-				return nextPostion
-			}
+			next, ok = moveUp(actual, puzzle)
 		}
 	case "-":
 		if actual.c > previous.c {
-			nextPostion = point{actual.l, actual.c + 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveRight(a) {
-				return nextPostion
-			}
+			next, ok = moveRight(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l, actual.c - 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveLeft(a) {
-				return nextPostion
-			}
+			next, ok = moveLeft(actual, puzzle)
 		}
 	case "L":
 		if actual.l > previous.l && actual.c == previous.c {
-			nextPostion = point{actual.l, actual.c + 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveRight(a) {
-				return nextPostion
-			}
+			next, ok = moveRight(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l - 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveUp(a) {
-				return nextPostion
-			}
+			next, ok = moveUp(actual, puzzle)
 		}
 	case "J":
 		if actual.l > previous.l {
-			nextPostion = point{actual.l, actual.c - 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveLeft(a) {
-				return nextPostion
-			}
+			next, ok = moveLeft(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l - 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveUp(a) {
-				return nextPostion
-			}
+			next, ok = moveUp(actual, puzzle)
 		}
 	case "7":
 		if actual.l == previous.l {
-			nextPostion = point{actual.l + 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveDown(a) {
-				return nextPostion
-			}
+			next, ok = moveDown(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l, actual.c - 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveLeft(a) {
-				return nextPostion
-			}
+			next, ok = moveLeft(actual, puzzle)
 		}
 	case "F":
 		if actual.l == previous.l {
-			nextPostion = point{actual.l + 1, actual.c}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveDown(a) {
-				return nextPostion
-			}
+			next, ok = moveDown(actual, puzzle)
 		} else {
-			nextPostion = point{actual.l, actual.c + 1}
-			a := puzzle[nextPostion.l][nextPostion.c]
-			if moveRight(a) {
-				return nextPostion
-			}
+			next, ok = moveRight(actual, puzzle)
 		}
 
 	}
-	return point{-1, -1}
+	if ok {
+		return next
+	}
+	return deadEnd
 }
 
 // | is a vertical pipe connecting north and south.
@@ -234,16 +194,34 @@ func next(puzzle [][]string, actual, previous point) point {
 // 7 is a 90-degree bend connecting south and west.
 // F is a 90-degree bend connecting south and east.
 // . is ground; there is no pipe in this tile.
-func moveDown(s string) bool {
+
+func moveRight(p point, puzzle [][]string) (point, bool) {
+	right := point{p.l, p.c + 1}
+	return right, moveRightValid(puzzle[right.l][right.c])
+}
+func moveLeft(p point, puzzle [][]string) (point, bool) {
+	left := point{p.l, p.c - 1}
+	return left, moveLeftValid(puzzle[left.l][left.c])
+}
+func moveUp(p point, puzzle [][]string) (point, bool) {
+	up := point{p.l - 1, p.c}
+	return up, moveUpValid(puzzle[up.l][up.c])
+}
+func moveDown(p point, puzzle [][]string) (point, bool) {
+	down := point{p.l + 1, p.c}
+	return down, moveDownValid(puzzle[down.l][down.c])
+}
+
+func moveDownValid(s string) bool {
 	return s == "|" || s == "J" || s == "L" || s == "S"
 }
-func moveUp(s string) bool {
+func moveUpValid(s string) bool {
 	return s == "|" || s == "F" || s == "7" || s == "S"
 }
-func moveLeft(s string) bool {
+func moveLeftValid(s string) bool {
 	return s == "-" || s == "F" || s == "L" || s == "S"
 }
-func moveRight(s string) bool {
+func moveRightValid(s string) bool {
 	return s == "-" || s == "7" || s == "J" || s == "S"
 }
 
