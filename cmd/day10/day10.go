@@ -116,20 +116,20 @@ func fillPuzzle() (p point, puzzle [][]string) {
 func firstMove(p point, puzzle [][]string) []point {
 	var moves []point
 
-	moveRight := puzzle[p.l][p.c+1]
-	if moveRight == "-" || moveRight == "7" || moveRight == "J" {
+	r := puzzle[p.l][p.c+1]
+	if moveRight(r) {
 		moves = append(moves, point{p.l, p.c + 1})
 	}
-	moveLeft := puzzle[p.l][p.c-1]
-	if moveLeft == "-" || moveLeft == "F" || moveLeft == "L" {
+	l := puzzle[p.l][p.c-1]
+	if moveLeft(l) {
 		moves = append(moves, point{p.l, p.c - 1})
 	}
-	moveUp := puzzle[p.l-1][p.c]
-	if moveUp == "|" || moveUp == "F" || moveUp == "7" {
+	u := puzzle[p.l-1][p.c]
+	if moveUp(u) {
 		moves = append(moves, point{p.l - 1, p.c})
 	}
-	moveDown := puzzle[p.l+1][p.c]
-	if moveDown == "|" || moveDown == "J" || moveDown == "L" {
+	d := puzzle[p.l+1][p.c]
+	if moveDown(d) {
 		moves = append(moves, point{p.l - 1, p.c})
 	}
 	return moves
@@ -142,98 +142,110 @@ func next(puzzle [][]string, actual, previous point) point {
 		if actual.l > previous.l {
 			nextPostion = point{actual.l + 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "L" || a == "J" || a == "S") {
-				return point{-1, -1}
+			if moveDown(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l - 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "7" || a == "F" || a == "S") {
-				return point{-1, -1}
+			if moveUp(a) {
+				return nextPostion
 			}
 		}
 	case "-":
 		if actual.c > previous.c {
 			nextPostion = point{actual.l, actual.c + 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "7" || a == "J" || a == "S") {
-				return point{-1, -1}
+			if moveRight(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l, actual.c - 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "F" || a == "L" || a == "S") {
-				return point{-1, -1}
+			if moveLeft(a) {
+				return nextPostion
 			}
 		}
 	case "L":
 		if actual.l > previous.l && actual.c == previous.c {
 			nextPostion = point{actual.l, actual.c + 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "7" || a == "J" || a == "S") {
-				return point{-1, -1}
+			if moveRight(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l - 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "F" || a == "7" || a == "S") {
-				return point{-1, -1}
+			if moveUp(a) {
+				return nextPostion
 			}
 		}
 	case "J":
 		if actual.l > previous.l {
 			nextPostion = point{actual.l, actual.c - 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "F" || a == "L" || a == "S") {
-				return point{-1, -1}
+			if moveLeft(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l - 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "F" || a == "7" || a == "S") {
-				return point{-1, -1}
+			if moveUp(a) {
+				return nextPostion
 			}
 		}
 	case "7":
 		if actual.l == previous.l {
 			nextPostion = point{actual.l + 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "J" || a == "L" || a == "S") {
-				return point{-1, -1}
+			if moveDown(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l, actual.c - 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "F" || a == "L" || a == "S") {
-				return point{-1, -1}
+			if moveLeft(a) {
+				return nextPostion
 			}
 		}
 	case "F":
 		if actual.l == previous.l {
 			nextPostion = point{actual.l + 1, actual.c}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "|" || a == "J" || a == "L" || a == "S") {
-				return point{-1, -1}
+			if moveDown(a) {
+				return nextPostion
 			}
 		} else {
 			nextPostion = point{actual.l, actual.c + 1}
 			a := puzzle[nextPostion.l][nextPostion.c]
-			if !(a == "-" || a == "J" || a == "7" || a == "S") {
-				return point{-1, -1}
+			if moveRight(a) {
+				return nextPostion
 			}
 		}
 
 	}
-	return nextPostion
+	return point{-1, -1}
 }
 
-//| is a vertical pipe connecting north and south.
+// | is a vertical pipe connecting north and south.
 // - is a horizontal pipe connecting east and west.
 // L is a 90-degree bend connecting north and east.
 // J is a 90-degree bend connecting north and west.
 // 7 is a 90-degree bend connecting south and west.
 // F is a 90-degree bend connecting south and east.
 // . is ground; there is no pipe in this tile.
+func moveDown(s string) bool {
+	return s == "|" || s == "J" || s == "L" || s == "S"
+}
+func moveUp(s string) bool {
+	return s == "|" || s == "F" || s == "7" || s == "S"
+}
+func moveLeft(s string) bool {
+	return s == "-" || s == "F" || s == "L" || s == "S"
+}
+func moveRight(s string) bool {
+	return s == "-" || s == "7" || s == "J" || s == "S"
+}
 
 // /Thanks ChatGPT
 func addDots(matrix [][]string, extraDots int) [][]string {
